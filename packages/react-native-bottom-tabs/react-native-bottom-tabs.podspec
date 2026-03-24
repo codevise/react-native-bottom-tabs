@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
     end
   end
 
-  s.dependency "SwiftUIIntrospect", '~> 1.0'
+  s.dependency "SwiftUIIntrospect", '~> 26.0'
 
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES'
