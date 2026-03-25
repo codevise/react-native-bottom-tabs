@@ -27,6 +27,7 @@ RCT_EXPORT_VIEW_PROPERTY(onPageSelected, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onTabLongPress, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onTabBarMeasured, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onNativeLayout, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onTabBarPosition, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(selectedPage, NSString)
 RCT_EXPORT_VIEW_PROPERTY(tabViewStyle, NSString)
 RCT_EXPORT_VIEW_PROPERTY(minimizeBehavior, NSString)
@@ -64,6 +65,11 @@ RCT_EXPORT_VIEW_PROPERTY(tabBarHidden, BOOL)
 
 - (void)onLayoutWithSize:(CGSize)size reactTag:(NSNumber *)reactTag {
   auto event = [[OnNativeLayoutEvent alloc] initWithReactTag:reactTag size:size];
+  [self.bridge.eventDispatcher sendEvent:event];
+}
+
+- (void)onTabBarPositionWithPosition:(NSString *)position reactTag:(NSNumber *)reactTag {
+  auto event = [[TabBarPositionEvent alloc] initWithReactTag:reactTag position:position];
   [self.bridge.eventDispatcher sendEvent:event];
 }
 

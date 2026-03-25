@@ -3,6 +3,7 @@ import type {
   OnNativeLayout,
   OnPageSelectedEventData,
   OnTabBarMeasured,
+  OnTabBarPosition,
   TabViewItems,
 } from './TabViewNativeComponent';
 import {
@@ -17,6 +18,7 @@ import {
   processColor,
 } from 'react-native';
 import { BottomTabBarHeightContext } from './utils/BottomTabBarHeightContext';
+import { TabBarPositionContext, type TabBarPosition } from './utils/TabBarPositionContext';
 
 // eslint-disable-next-line @react-native/no-deep-imports
 import type { ImageSource } from 'react-native/Libraries/Image/ImageSource';
@@ -222,6 +224,7 @@ const TabView = <Route extends BaseRoute>({
   const focusedKey = navigationState.routes[navigationState.index].key;
   const customTabBarWrapperRef = useRef<View>(null);
   const [tabBarHeight, setTabBarHeight] = React.useState<number | undefined>(0);
+  const [tabBarPosition, setTabBarPosition] = React.useState<TabBarPosition>(undefined);
   const [measuredDimensions, setMeasuredDimensions] = React.useState<
     { width: DimensionValue; height: DimensionValue } | undefined
   >({ width: '100%', height: '100%' });
@@ -344,6 +347,13 @@ const TabView = <Route extends BaseRoute>({
     [setMeasuredDimensions]
   );
 
+  const handleTabBarPosition = React.useCallback(
+    ({ nativeEvent: { position } }: { nativeEvent: OnTabBarPosition }) => {
+      setTabBarPosition(position as TabBarPosition);
+    },
+    [setTabBarPosition]
+  );
+
   useLayoutEffect(() => {
     // If we are rendering a custom tab bar, we need to measure it to set the tab bar height.
     if (renderCustomTabBar && customTabBarWrapperRef.current) {
@@ -354,6 +364,7 @@ const TabView = <Route extends BaseRoute>({
   }, [renderCustomTabBar]);
 
   return (
+    <TabBarPositionContext.Provider value={tabBarPosition}>
     <BottomTabBarHeightContext.Provider value={tabBarHeight}>
       <NativeTabView
         {...props}
@@ -368,6 +379,7 @@ const TabView = <Route extends BaseRoute>({
         onPageSelected={handlePageSelected}
         onTabBarMeasured={handleTabBarMeasured}
         onNativeLayout={handleNativeLayout}
+        onTabBarPosition={handleTabBarPosition}
         hapticFeedbackEnabled={hapticFeedbackEnabled}
         activeTintColor={activeTintColor}
         inactiveTintColor={inactiveTintColor}
@@ -421,6 +433,7 @@ const TabView = <Route extends BaseRoute>({
         <View ref={customTabBarWrapperRef}>{renderCustomTabBar()}</View>
       ) : null}
     </BottomTabBarHeightContext.Provider>
+    </TabBarPositionContext.Provider>
   );
 };
 

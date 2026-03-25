@@ -22,6 +22,10 @@ export type OnNativeLayout = Readonly<{
   height: Double;
 }>;
 
+export type OnTabBarPosition = Readonly<{
+  position: string;
+}>;
+
 export type TabViewItems = ReadonlyArray<{
   key: string;
   title: string;
@@ -41,6 +45,7 @@ export interface TabViewProps extends ViewProps {
   onTabLongPress?: DirectEventHandler<OnPageSelectedEventData>;
   onTabBarMeasured?: DirectEventHandler<OnTabBarMeasured>;
   onNativeLayout?: DirectEventHandler<OnNativeLayout>;
+  onTabBarPosition?: DirectEventHandler<OnTabBarPosition>;
   icons?: ReadonlyArray<ImageSource>;
   tabBarHidden?: boolean;
   labeled?: boolean;

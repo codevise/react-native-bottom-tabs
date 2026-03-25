@@ -43,6 +43,7 @@ public final class TabInfo: NSObject {
   func onLongPress(key: String, reactTag: NSNumber?)
   func onTabBarMeasured(height: Int, reactTag: NSNumber?)
   func onLayout(size: CGSize, reactTag: NSNumber?)
+  func onTabBarPosition(position: String, reactTag: NSNumber?)
 }
 
 @objc public class TabViewProvider: PlatformView {
@@ -58,6 +59,7 @@ public final class TabInfo: NSObject {
   @objc var onTabLongPress: RCTDirectEventBlock?
   @objc var onTabBarMeasured: RCTDirectEventBlock?
   @objc var onNativeLayout: RCTDirectEventBlock?
+  @objc var onTabBarPosition: RCTDirectEventBlock?
 
   @objc public var icons: NSArray? {
     didSet {
@@ -221,6 +223,40 @@ public final class TabInfo: NSObject {
 #endif
     }
   }
+
+  #if !os(macOS)
+  override public func didMoveToWindow() {
+    super.didMoveToWindow()
+    if window != nil {
+      emitTabBarPosition()
+      if #available(iOS 17.0, *) {
+        registerForTraitChanges([UITraitHorizontalSizeClass.self]) { (self: TabViewProvider, _: UITraitCollection) in
+          self.emitTabBarPosition()
+        }
+      }
+    }
+  }
+
+  // Fallback for iOS < 17
+  override public func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+    super.traitCollectionDidChange(previousTraitCollection)
+    if #unavailable(iOS 17.0) {
+      if traitCollection.horizontalSizeClass != previousTraitCollection?.horizontalSizeClass {
+        emitTabBarPosition()
+      }
+    }
+  }
+
+  private func emitTabBarPosition() {
+    let isRegularWidth = traitCollection.horizontalSizeClass == .regular
+    var tabsCanBeAtTop = false
+    if #available(iOS 18.0, *) {
+      tabsCanBeAtTop = true
+    }
+    let position = (isRegularWidth && tabsCanBeAtTop) ? "top" : "bottom"
+    delegate?.onTabBarPosition(position: position, reactTag: reactTag)
+  }
+  #endif
 
   @objc(insertChild:atIndex:)
   public func insertChild(_ child: UIView, at index: Int) {
