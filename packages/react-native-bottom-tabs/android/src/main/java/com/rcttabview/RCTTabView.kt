@@ -42,7 +42,13 @@ class ExtendedBottomNavigationView(context: Context) : BottomNavigationView(cont
 
 class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
   private var bottomNavigation = ExtendedBottomNavigationView(context)
+  private val topDivider = View(context)
   val layoutHolder = FrameLayout(context)
+  private val topDividerHeight = TypedValue.applyDimension(
+    TypedValue.COMPLEX_UNIT_DIP,
+    1f,
+    resources.displayMetrics
+  ).toInt().coerceAtLeast(1)
 
   var onTabSelectedListener: ((key: String) -> Unit)? = null
   var onTabLongPressedListener: ((key: String) -> Unit)? = null
@@ -57,6 +63,9 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
   private var selectedItem: String? = null
   private var activeTintColor: Int? = null
   private var inactiveTintColor: Int? = null
+  private var dividerColor: Int? = null
+  private var labelActiveTintColor: Int? = null
+  private var labelInactiveTintColor: Int? = null
   private val checkedStateSet = intArrayOf(android.R.attr.state_checked)
   private val uncheckedStateSet = intArrayOf(-android.R.attr.state_checked)
   private var hapticFeedbackEnabled = false
@@ -85,6 +94,12 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     )
     layoutHolder.isSaveEnabled = false
 
+    addView(topDivider, LayoutParams(
+      LayoutParams.MATCH_PARENT,
+      topDividerHeight
+    ))
+    updateTopDividerColor()
+
     addView(bottomNavigation, LayoutParams(
       LayoutParams.MATCH_PARENT,
       LayoutParams.WRAP_CONTENT
@@ -111,6 +126,14 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     }
   }
 
+  private fun updateTopDividerColor() {
+    val dividerColor =
+      this.dividerColor
+        ?: Utils.getDefaultColorFor(context, com.google.android.material.R.attr.colorOutlineVariant)
+        ?: Utils.getDefaultColorFor(context, android.R.attr.textColorSecondary)
+        ?: return
+    topDivider.setBackgroundColor(dividerColor)
+  }
   private val layoutCallback = Choreographer.FrameCallback {
     isLayoutEnqueued = false
     refreshLayout()
@@ -147,7 +170,7 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
   }
 
   override fun addView(child: View, index: Int, params: ViewGroup.LayoutParams?) {
-    if (child === layoutHolder || child === bottomNavigation) {
+    if (child === layoutHolder || child === topDivider || child === bottomNavigation) {
       super.addView(child, index, params)
       return
     }
@@ -220,8 +243,10 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
 
   fun setTabBarHidden(isHidden: Boolean) {
     if (isHidden) {
+      topDivider.visibility = GONE
       bottomNavigation.visibility = GONE
     } else {
+      topDivider.visibility = VISIBLE
       bottomNavigation.visibility = VISIBLE
     }
   }
@@ -374,6 +399,21 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     updateTintColors()
   }
 
+  fun setDividerColor(color: Int?) {
+    dividerColor = color
+    updateTopDividerColor()
+  }
+
+  fun setLabelActiveTintColor(color: Int?) {
+    labelActiveTintColor = color
+    updateTintColors()
+  }
+
+  fun setLabelInactiveTintColor(color: Int?) {
+    labelInactiveTintColor = color
+    updateTintColors()
+  }
+
   fun setActiveIndicatorColor(color: ColorStateList) {
     bottomNavigation.itemActiveIndicatorColor = color
   }
@@ -451,11 +491,21 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
       inactiveTintColor ?: Utils.getDefaultColorFor(context, android.R.attr.textColorSecondary)
       ?: return
     val states = arrayOf(uncheckedStateSet, checkedStateSet)
-    val colors = intArrayOf(colorSecondary, colorPrimary)
 
-    ColorStateList(states, colors).apply {
-      this@ReactBottomNavigationView.bottomNavigation.itemTextColor = this
+    ColorStateList(states, intArrayOf(colorSecondary, colorPrimary)).apply {
       this@ReactBottomNavigationView.bottomNavigation.itemIconTintList = this
+    }
+
+    val textActive =
+      labelActiveTintColor
+        ?: Utils.getDefaultColorFor(context, com.google.android.material.R.attr.colorOnSurface)
+        ?: colorPrimary
+    val textInactive =
+      labelInactiveTintColor
+        ?: Utils.getDefaultColorFor(context, com.google.android.material.R.attr.colorOnSurfaceVariant)
+        ?: colorSecondary
+    ColorStateList(states, intArrayOf(textInactive, textActive)).apply {
+      this@ReactBottomNavigationView.bottomNavigation.itemTextColor = this
     }
   }
 
@@ -476,6 +526,7 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     removeView(bottomNavigation)
     bottomNavigation = ExtendedBottomNavigationView(context)
     addView(bottomNavigation)
+    updateTopDividerColor()
     updateItems(items)
     setLabeled(this.labeled)
     this.selectedItem?.let { setSelectedItem(it) }

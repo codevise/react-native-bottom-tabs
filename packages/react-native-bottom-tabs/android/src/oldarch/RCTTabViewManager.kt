@@ -117,6 +117,21 @@ class RCTTabViewManager(context: ReactApplicationContext) : ViewGroupManager<Rea
     tabViewImpl.setInactiveTintColor(view, color)
   }
 
+  @ReactProp(name = "dividerColor", customType = "Color")
+  fun setDividerColor(view: ReactBottomNavigationView, color: Int?) {
+    tabViewImpl.setDividerColor(view, color)
+  }
+
+  @ReactProp(name = "labelActiveTintColor", customType = "Color")
+  fun setLabelActiveTintColor(view: ReactBottomNavigationView, color: Int?) {
+    tabViewImpl.setLabelActiveTintColor(view, color)
+  }
+
+  @ReactProp(name = "labelInactiveTintColor", customType = "Color")
+  fun setLabelInactiveTintColor(view: ReactBottomNavigationView, color: Int?) {
+    tabViewImpl.setLabelInactiveTintColor(view, color)
+  }
+
   @ReactProp(name = "activeIndicatorColor", customType = "Color")
   fun setActiveIndicatorColor(view: ReactBottomNavigationView, color: Int?) {
     tabViewImpl.setActiveIndicatorColor(view, color)

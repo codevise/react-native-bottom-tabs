@@ -81,6 +81,18 @@ class RCTTabViewImpl {
     view.setInactiveTintColor(color)
   }
 
+  fun setDividerColor(view: ReactBottomNavigationView, color: Int?) {
+    view.setDividerColor(color)
+  }
+
+  fun setLabelActiveTintColor(view: ReactBottomNavigationView, color: Int?) {
+    view.setLabelActiveTintColor(color)
+  }
+
+  fun setLabelInactiveTintColor(view: ReactBottomNavigationView, color: Int?) {
+    view.setLabelInactiveTintColor(color)
+  }
+
   fun setHapticFeedbackEnabled(view: ReactBottomNavigationView, enabled: Boolean) {
    view.isHapticFeedbackEnabled = enabled
   }

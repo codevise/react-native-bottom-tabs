@@ -72,6 +72,18 @@ interface Props<Route extends BaseRoute> {
    */
   tabBarInactiveTintColor?: ColorValue;
   /**
+   * Divider color shown above the tab bar. (Android only)
+   */
+  tabBarDividerColor?: ColorValue;
+  /**
+   * Active label color. (Android only)
+   */
+  tabBarLabelActiveTintColor?: ColorValue;
+  /**
+   * Inactive label color. (Android only)
+   */
+  tabBarLabelInactiveTintColor?: ColorValue;
+  /**
    * State for the tab view.
    *
    * The state should contain a `routes` prop which is an array of objects containing `key` and `title` props, such as `{ key: 'music', title: 'Music' }`.
@@ -196,6 +208,9 @@ const TabView = <Route extends BaseRoute>({
   rippleColor,
   tabBarActiveTintColor: activeTintColor,
   tabBarInactiveTintColor: inactiveTintColor,
+  tabBarDividerColor: dividerColor,
+  tabBarLabelActiveTintColor: labelActiveTintColor,
+  tabBarLabelInactiveTintColor: labelInactiveTintColor,
   getBadge = ({ route }: { route: Route }) => route.badge,
   getLazy = ({ route }: { route: Route }) => route.lazy,
   getLabelText = ({ route }: { route: Route }) => route.title,
@@ -384,6 +399,9 @@ const TabView = <Route extends BaseRoute>({
         activeTintColor={activeTintColor}
         inactiveTintColor={inactiveTintColor}
         barTintColor={tabBarStyle?.backgroundColor}
+        dividerColor={dividerColor}
+        labelActiveTintColor={labelActiveTintColor}
+        labelInactiveTintColor={labelInactiveTintColor}
         rippleColor={rippleColor}
         labeled={labeled}
       >
