@@ -273,7 +273,9 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
       if (item.badge?.isNotEmpty() == true) {
         val badge = bottomNavigation.getOrCreateBadge(index)
         badge.isVisible = true
-        badge.text = item.badge
+        // Blank string means "show dot" — leave text null for the small 6dp dot badge.
+        // Non-blank strings are shown as the full text badge.
+        badge.text = item.badge?.takeUnless { it.isBlank() }
       } else {
         bottomNavigation.removeBadge(index)
       }
