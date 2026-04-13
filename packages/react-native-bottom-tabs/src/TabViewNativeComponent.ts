@@ -59,6 +59,8 @@ export interface TabViewProps extends ViewProps {
   inactiveTintColor?: ColorValue;
   labelActiveTintColor?: ColorValue;
   labelInactiveTintColor?: ColorValue;
+  tabBarItemPaddingTop?: WithDefault<Int32, -1>;
+  tabBarItemPaddingBottom?: WithDefault<Int32, -1>;
   disablePageAnimations?: boolean;
   activeIndicatorColor?: ColorValue;
   hapticFeedbackEnabled?: boolean;

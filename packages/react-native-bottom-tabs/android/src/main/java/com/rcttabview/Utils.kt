@@ -12,6 +12,14 @@ class Utils {
       return (value / displayDensity).toDouble()
     }
 
+    fun convertDpToPx(context: Context, value: Int): Int {
+      return TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        value.toFloat(),
+        context.resources.displayMetrics
+      ).toInt()
+    }
+
     fun getTypefaceStyle(weight: Int?) = when (weight) {
       700 -> Typeface.BOLD
       else -> Typeface.NORMAL

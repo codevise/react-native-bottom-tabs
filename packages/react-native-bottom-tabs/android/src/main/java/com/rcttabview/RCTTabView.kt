@@ -38,9 +38,16 @@ class ExtendedBottomNavigationView(context: Context) : BottomNavigationView(cont
   override fun getMaxItemCount(): Int {
     return 100
   }
+
+  // Ignore the styled 80dp min height while preserving any intrinsic background minimum.
+  override fun getSuggestedMinimumHeight(): Int = background?.minimumHeight ?: 0
 }
 
 class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
+  private var defaultItemPaddingTop = 0
+  private var defaultItemPaddingBottom = 0
+  private var tabBarItemPaddingTop: Int? = null
+  private var tabBarItemPaddingBottom: Int? = null
   private var bottomNavigation = ExtendedBottomNavigationView(context)
   private val topDivider = View(context)
   val layoutHolder = FrameLayout(context)
@@ -84,6 +91,7 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     .build()
 
   init {
+    captureDefaultItemPadding()
     orientation = VERTICAL
 
     addView(
@@ -100,10 +108,7 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     ))
     updateTopDividerColor()
 
-    addView(bottomNavigation, LayoutParams(
-      LayoutParams.MATCH_PARENT,
-      LayoutParams.WRAP_CONTENT
-    ))
+    addBottomNavigationView(bottomNavigation)
     uiModeConfiguration = resources.configuration.uiMode
 
     post {
@@ -134,6 +139,23 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
         ?: return
     topDivider.setBackgroundColor(dividerColor)
   }
+
+  private fun addBottomNavigationView(view: ExtendedBottomNavigationView) {
+    addView(
+      view,
+      LayoutParams(
+        LayoutParams.MATCH_PARENT,
+        LayoutParams.WRAP_CONTENT
+      )
+    )
+    applyConfiguredItemPadding()
+  }
+
+  private fun captureDefaultItemPadding() {
+    defaultItemPaddingTop = bottomNavigation.itemPaddingTop
+    defaultItemPaddingBottom = bottomNavigation.itemPaddingBottom
+  }
+
   private val layoutCallback = Choreographer.FrameCallback {
     isLayoutEnqueued = false
     refreshLayout()
@@ -353,6 +375,16 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     bottomNavigation.itemRippleColor = color
   }
 
+  fun setTabBarItemPaddingTop(value: Int?) {
+    tabBarItemPaddingTop = value
+    applyConfiguredItemPadding()
+  }
+
+  fun setTabBarItemPaddingBottom(value: Int?) {
+    tabBarItemPaddingBottom = value
+    applyConfiguredItemPadding()
+  }
+
   @SuppressLint("CheckResult")
   private fun getDrawable(imageSource: ImageSource, onDrawableReady: (Drawable?) -> Unit) {
     drawableCache[imageSource]?.let {
@@ -511,6 +543,13 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     }
   }
 
+  private fun applyConfiguredItemPadding() {
+    bottomNavigation.itemPaddingTop =
+      tabBarItemPaddingTop?.let { Utils.convertDpToPx(context, it) } ?: defaultItemPaddingTop
+    bottomNavigation.itemPaddingBottom =
+      tabBarItemPaddingBottom?.let { Utils.convertDpToPx(context, it) } ?: defaultItemPaddingBottom
+  }
+
   override fun onConfigurationChanged(newConfig: Configuration?) {
     super.onConfigurationChanged(newConfig)
     if (uiModeConfiguration == newConfig?.uiMode || hasCustomAppearance) {
@@ -527,7 +566,8 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     // We also opt-out of this recreation when custom styles are used.
     removeView(bottomNavigation)
     bottomNavigation = ExtendedBottomNavigationView(context)
-    addView(bottomNavigation)
+    captureDefaultItemPadding()
+    addBottomNavigationView(bottomNavigation)
     updateTopDividerColor()
     updateItems(items)
     setLabeled(this.labeled)

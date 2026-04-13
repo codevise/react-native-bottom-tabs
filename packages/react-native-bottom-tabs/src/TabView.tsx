@@ -18,7 +18,10 @@ import {
   processColor,
 } from 'react-native';
 import { BottomTabBarHeightContext } from './utils/BottomTabBarHeightContext';
-import { TabBarPositionContext, type TabBarPosition } from './utils/TabBarPositionContext';
+import {
+  TabBarPositionContext,
+  type TabBarPosition,
+} from './utils/TabBarPositionContext';
 
 // eslint-disable-next-line @react-native/no-deep-imports
 import type { ImageSource } from 'react-native/Libraries/Image/ImageSource';
@@ -75,6 +78,14 @@ interface Props<Route extends BaseRoute> {
    * Divider color shown above the tab bar. (Android only)
    */
   tabBarDividerColor?: ColorValue;
+  /**
+   * Top padding for Android tab bar items in dp.
+   */
+  tabBarItemPaddingTop?: number;
+  /**
+   * Bottom padding for Android tab bar items in dp.
+   */
+  tabBarItemPaddingBottom?: number;
   /**
    * Active label color. (Android only)
    */
@@ -209,6 +220,8 @@ const TabView = <Route extends BaseRoute>({
   tabBarActiveTintColor: activeTintColor,
   tabBarInactiveTintColor: inactiveTintColor,
   tabBarDividerColor: dividerColor,
+  tabBarItemPaddingTop,
+  tabBarItemPaddingBottom,
   tabBarLabelActiveTintColor: labelActiveTintColor,
   tabBarLabelInactiveTintColor: labelInactiveTintColor,
   getBadge = ({ route }: { route: Route }) => route.badge,
@@ -239,7 +252,8 @@ const TabView = <Route extends BaseRoute>({
   const focusedKey = navigationState.routes[navigationState.index].key;
   const customTabBarWrapperRef = useRef<View>(null);
   const [tabBarHeight, setTabBarHeight] = React.useState<number | undefined>(0);
-  const [tabBarPosition, setTabBarPosition] = React.useState<TabBarPosition>(undefined);
+  const [tabBarPosition, setTabBarPosition] =
+    React.useState<TabBarPosition>(undefined);
   const [measuredDimensions, setMeasuredDimensions] = React.useState<
     { width: DimensionValue; height: DimensionValue } | undefined
   >({ width: '100%', height: '100%' });
@@ -264,7 +278,7 @@ const TabView = <Route extends BaseRoute>({
 
   if (!loaded.includes(focusedKey)) {
     // Set the current tab to be loaded if it was not loaded before
-    setLoaded((loaded) => [...loaded, focusedKey]);
+    setLoaded((currentLoaded) => [...currentLoaded, focusedKey]);
   }
 
   const icons = React.useMemo(
@@ -380,77 +394,79 @@ const TabView = <Route extends BaseRoute>({
 
   return (
     <TabBarPositionContext.Provider value={tabBarPosition}>
-    <BottomTabBarHeightContext.Provider value={tabBarHeight}>
-      <NativeTabView
-        {...props}
-        {...tabLabelStyle}
-        style={styles.fullWidth}
-        items={items}
-        // When rendering a custom tab bar, icons can be React elements, which will not be properly resolved.
-        icons={renderCustomTabBar ? undefined : resolvedIconAssets}
-        selectedPage={focusedKey}
-        tabBarHidden={!!renderCustomTabBar}
-        onTabLongPress={handleTabLongPress}
-        onPageSelected={handlePageSelected}
-        onTabBarMeasured={handleTabBarMeasured}
-        onNativeLayout={handleNativeLayout}
-        onTabBarPosition={handleTabBarPosition}
-        hapticFeedbackEnabled={hapticFeedbackEnabled}
-        activeTintColor={activeTintColor}
-        inactiveTintColor={inactiveTintColor}
-        barTintColor={tabBarStyle?.backgroundColor}
-        dividerColor={dividerColor}
-        labelActiveTintColor={labelActiveTintColor}
-        labelInactiveTintColor={labelInactiveTintColor}
-        rippleColor={rippleColor}
-        labeled={labeled}
-      >
-        {trimmedRoutes.map((route) => {
-          if (getLazy({ route }) !== false && !loaded.includes(route.key)) {
-            // Don't render a screen if we've never navigated to it
+      <BottomTabBarHeightContext.Provider value={tabBarHeight}>
+        <NativeTabView
+          {...props}
+          {...tabLabelStyle}
+          style={styles.fullWidth}
+          items={items}
+          // When rendering a custom tab bar, icons can be React elements, which will not be properly resolved.
+          icons={renderCustomTabBar ? undefined : resolvedIconAssets}
+          selectedPage={focusedKey}
+          tabBarHidden={!!renderCustomTabBar}
+          onTabLongPress={handleTabLongPress}
+          onPageSelected={handlePageSelected}
+          onTabBarMeasured={handleTabBarMeasured}
+          onNativeLayout={handleNativeLayout}
+          onTabBarPosition={handleTabBarPosition}
+          hapticFeedbackEnabled={hapticFeedbackEnabled}
+          activeTintColor={activeTintColor}
+          inactiveTintColor={inactiveTintColor}
+          barTintColor={tabBarStyle?.backgroundColor}
+          dividerColor={dividerColor}
+          tabBarItemPaddingTop={tabBarItemPaddingTop}
+          tabBarItemPaddingBottom={tabBarItemPaddingBottom}
+          labelActiveTintColor={labelActiveTintColor}
+          labelInactiveTintColor={labelInactiveTintColor}
+          rippleColor={rippleColor}
+          labeled={labeled}
+        >
+          {trimmedRoutes.map((route) => {
+            if (getLazy({ route }) !== false && !loaded.includes(route.key)) {
+              // Don't render a screen if we've never navigated to it
+              return (
+                <View
+                  key={route.key}
+                  collapsable={false}
+                  style={styles.fullWidth}
+                />
+              );
+            }
+
+            const focused = route.key === focusedKey;
+            const freeze = !focused ? getFreezeOnBlur({ route }) : false;
+
+            const customStyle = getSceneStyle({ route });
+
             return (
               <View
                 key={route.key}
+                style={[
+                  styles.screen,
+                  renderCustomTabBar ? styles.fullWidth : measuredDimensions,
+                  customStyle,
+                ]}
                 collapsable={false}
-                style={styles.fullWidth}
-              />
+                pointerEvents={focused ? 'auto' : 'none'}
+                accessibilityElementsHidden={!focused}
+                importantForAccessibility={
+                  focused ? 'auto' : 'no-hide-descendants'
+                }
+              >
+                <DelayedFreeze freeze={!!freeze}>
+                  {renderScene({
+                    route,
+                    jumpTo,
+                  })}
+                </DelayedFreeze>
+              </View>
             );
-          }
-
-          const focused = route.key === focusedKey;
-          const freeze = !focused ? getFreezeOnBlur({ route }) : false;
-
-          const customStyle = getSceneStyle({ route });
-
-          return (
-            <View
-              key={route.key}
-              style={[
-                styles.screen,
-                renderCustomTabBar ? styles.fullWidth : measuredDimensions,
-                customStyle,
-              ]}
-              collapsable={false}
-              pointerEvents={focused ? 'auto' : 'none'}
-              accessibilityElementsHidden={!focused}
-              importantForAccessibility={
-                focused ? 'auto' : 'no-hide-descendants'
-              }
-            >
-              <DelayedFreeze freeze={!!freeze}>
-                {renderScene({
-                  route,
-                  jumpTo,
-                })}
-              </DelayedFreeze>
-            </View>
-          );
-        })}
-      </NativeTabView>
-      {renderCustomTabBar ? (
-        <View ref={customTabBarWrapperRef}>{renderCustomTabBar()}</View>
-      ) : null}
-    </BottomTabBarHeightContext.Provider>
+          })}
+        </NativeTabView>
+        {renderCustomTabBar ? (
+          <View ref={customTabBarWrapperRef}>{renderCustomTabBar()}</View>
+        ) : null}
+      </BottomTabBarHeightContext.Provider>
     </TabBarPositionContext.Provider>
   );
 };

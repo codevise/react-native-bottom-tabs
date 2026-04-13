@@ -132,6 +132,16 @@ class RCTTabViewManager(context: ReactApplicationContext) : ViewGroupManager<Rea
     tabViewImpl.setLabelInactiveTintColor(view, color)
   }
 
+  @ReactProp(name = "tabBarItemPaddingTop", defaultInt = RCTTabViewImpl.UNSET_ITEM_PADDING)
+  fun setTabBarItemPaddingTop(view: ReactBottomNavigationView, value: Int) {
+    tabViewImpl.setTabBarItemPaddingTop(view, value)
+  }
+
+  @ReactProp(name = "tabBarItemPaddingBottom", defaultInt = RCTTabViewImpl.UNSET_ITEM_PADDING)
+  fun setTabBarItemPaddingBottom(view: ReactBottomNavigationView, value: Int) {
+    tabViewImpl.setTabBarItemPaddingBottom(view, value)
+  }
+
   @ReactProp(name = "activeIndicatorColor", customType = "Color")
   fun setActiveIndicatorColor(view: ReactBottomNavigationView, color: Int?) {
     tabViewImpl.setActiveIndicatorColor(view, color)

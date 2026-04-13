@@ -66,6 +66,14 @@ class RCTTabViewImpl {
     }
   }
 
+  fun setTabBarItemPaddingTop(view: ReactBottomNavigationView, value: Int) {
+    view.setTabBarItemPaddingTop(value.takeIf { it != UNSET_ITEM_PADDING })
+  }
+
+  fun setTabBarItemPaddingBottom(view: ReactBottomNavigationView, value: Int) {
+    view.setTabBarItemPaddingBottom(value.takeIf { it != UNSET_ITEM_PADDING })
+  }
+
   fun setActiveIndicatorColor(view: ReactBottomNavigationView, color: Int?) {
     if (color != null) {
       val color = ColorStateList.valueOf(color)
@@ -94,7 +102,7 @@ class RCTTabViewImpl {
   }
 
   fun setHapticFeedbackEnabled(view: ReactBottomNavigationView, enabled: Boolean) {
-   view.isHapticFeedbackEnabled = enabled
+    view.isHapticFeedbackEnabled = enabled
   }
 
   fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any>? {
@@ -136,5 +144,6 @@ class RCTTabViewImpl {
 
   companion object {
     const val NAME = "RNCTabView"
+    const val UNSET_ITEM_PADDING = -1
   }
 }
