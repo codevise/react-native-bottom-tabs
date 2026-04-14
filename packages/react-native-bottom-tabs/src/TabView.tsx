@@ -79,6 +79,10 @@ interface Props<Route extends BaseRoute> {
    */
   tabBarDividerColor?: ColorValue;
   /**
+   * Divider height shown above the tab bar in dp. (Android only)
+   */
+  tabBarDividerHeight?: number;
+  /**
    * Top padding for Android tab bar items in dp.
    */
   tabBarItemPaddingTop?: number;
@@ -220,6 +224,7 @@ const TabView = <Route extends BaseRoute>({
   tabBarActiveTintColor: activeTintColor,
   tabBarInactiveTintColor: inactiveTintColor,
   tabBarDividerColor: dividerColor,
+  tabBarDividerHeight,
   tabBarItemPaddingTop,
   tabBarItemPaddingBottom,
   tabBarLabelActiveTintColor: labelActiveTintColor,
@@ -414,6 +419,7 @@ const TabView = <Route extends BaseRoute>({
           inactiveTintColor={inactiveTintColor}
           barTintColor={tabBarStyle?.backgroundColor}
           dividerColor={dividerColor}
+          tabBarDividerHeight={tabBarDividerHeight}
           tabBarItemPaddingTop={tabBarItemPaddingTop}
           tabBarItemPaddingBottom={tabBarItemPaddingBottom}
           labelActiveTintColor={labelActiveTintColor}

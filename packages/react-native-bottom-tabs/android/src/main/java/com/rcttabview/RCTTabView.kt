@@ -44,18 +44,22 @@ class ExtendedBottomNavigationView(context: Context) : BottomNavigationView(cont
 }
 
 class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
+  private companion object {
+    const val DEFAULT_TOP_DIVIDER_HEIGHT_DP = 1
+  }
+
   private var defaultItemPaddingTop = 0
   private var defaultItemPaddingBottom = 0
   private var tabBarItemPaddingTop: Int? = null
   private var tabBarItemPaddingBottom: Int? = null
+  private var tabBarDividerHeight: Int? = null
   private var bottomNavigation = ExtendedBottomNavigationView(context)
   private val topDivider = View(context)
   val layoutHolder = FrameLayout(context)
-  private val topDividerHeight = TypedValue.applyDimension(
-    TypedValue.COMPLEX_UNIT_DIP,
-    1f,
-    resources.displayMetrics
-  ).toInt().coerceAtLeast(1)
+  private val defaultTopDividerHeight = Utils.convertDpToPx(
+    context,
+    DEFAULT_TOP_DIVIDER_HEIGHT_DP
+  ).coerceAtLeast(1)
 
   var onTabSelectedListener: ((key: String) -> Unit)? = null
   var onTabLongPressedListener: ((key: String) -> Unit)? = null
@@ -104,7 +108,7 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
 
     addView(topDivider, LayoutParams(
       LayoutParams.MATCH_PARENT,
-      topDividerHeight
+      defaultTopDividerHeight
     ))
     updateTopDividerColor()
 
@@ -138,6 +142,23 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
         ?: Utils.getDefaultColorFor(context, android.R.attr.textColorSecondary)
         ?: return
     topDivider.setBackgroundColor(dividerColor)
+  }
+
+  private fun updateTopDividerHeight() {
+    val dividerHeight =
+      tabBarDividerHeight?.let(::convertDividerHeightToPx) ?: defaultTopDividerHeight
+    topDivider.layoutParams = (topDivider.layoutParams as LayoutParams).apply {
+      height = dividerHeight
+    }
+    topDivider.requestLayout()
+  }
+
+  private fun convertDividerHeightToPx(value: Int): Int {
+    if (value <= 0) {
+      return 0
+    }
+
+    return Utils.convertDpToPx(context, value).coerceAtLeast(1)
   }
 
   private fun addBottomNavigationView(view: ExtendedBottomNavigationView) {
@@ -385,6 +406,11 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     applyConfiguredItemPadding()
   }
 
+  fun setTabBarDividerHeight(value: Int?) {
+    tabBarDividerHeight = value
+    updateTopDividerHeight()
+  }
+
   @SuppressLint("CheckResult")
   private fun getDrawable(imageSource: ImageSource, onDrawableReady: (Drawable?) -> Unit) {
     drawableCache[imageSource]?.let {
@@ -569,6 +595,7 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     captureDefaultItemPadding()
     addBottomNavigationView(bottomNavigation)
     updateTopDividerColor()
+    updateTopDividerHeight()
     updateItems(items)
     setLabeled(this.labeled)
     this.selectedItem?.let { setSelectedItem(it) }

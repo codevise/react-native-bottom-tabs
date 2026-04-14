@@ -67,11 +67,15 @@ class RCTTabViewImpl {
   }
 
   fun setTabBarItemPaddingTop(view: ReactBottomNavigationView, value: Int) {
-    view.setTabBarItemPaddingTop(value.takeIf { it != UNSET_ITEM_PADDING })
+    view.setTabBarItemPaddingTop(value.takeIf { it != UNSET_DP_VALUE })
   }
 
   fun setTabBarItemPaddingBottom(view: ReactBottomNavigationView, value: Int) {
-    view.setTabBarItemPaddingBottom(value.takeIf { it != UNSET_ITEM_PADDING })
+    view.setTabBarItemPaddingBottom(value.takeIf { it != UNSET_DP_VALUE })
+  }
+
+  fun setTabBarDividerHeight(view: ReactBottomNavigationView, value: Int) {
+    view.setTabBarDividerHeight(value.takeIf { it != UNSET_DP_VALUE })
   }
 
   fun setActiveIndicatorColor(view: ReactBottomNavigationView, color: Int?) {
@@ -144,6 +148,6 @@ class RCTTabViewImpl {
 
   companion object {
     const val NAME = "RNCTabView"
-    const val UNSET_ITEM_PADDING = -1
+    const val UNSET_DP_VALUE = -1
   }
 }
