@@ -65,6 +65,7 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
   var onTabLongPressedListener: ((key: String) -> Unit)? = null
   var onNativeLayoutListener: ((width: Double, height: Double) -> Unit)? = null
   var onTabBarMeasuredListener: ((height: Int) -> Unit)? = null
+  var onTabBarPositionListener: ((position: String) -> Unit)? = null
   var disablePageAnimations = false
   var items: MutableList<TabInfo> = mutableListOf()
   private val iconSources: MutableMap<Int, ImageSource> = mutableMapOf()
@@ -121,8 +122,9 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
         val newWidth = right - left
         val newHeight = bottom - top
 
-        // Notify about tab bar height.
+        // Notify about tab bar height and position (always bottom on Android).
         onTabBarMeasuredListener?.invoke(Utils.convertPixelsToDp(context, bottomNavigation.height).toInt())
+        onTabBarPositionListener?.invoke("bottom")
 
         if (newWidth != lastReportedSize?.width || newHeight != lastReportedSize?.height) {
           val dpWidth = Utils.convertPixelsToDp(context, layoutHolder.width)

@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.common.MapBuilder
 import com.rcttabview.events.OnNativeLayoutEvent
 import com.rcttabview.events.OnTabBarMeasuredEvent
+import com.rcttabview.events.OnTabBarPositionEvent
 import com.rcttabview.events.PageSelectedEvent
 import com.rcttabview.events.TabLongPressEvent
 
@@ -118,7 +119,9 @@ class RCTTabViewImpl {
       OnNativeLayoutEvent.EVENT_NAME,
       MapBuilder.of("registrationName", "onNativeLayout"),
       OnTabBarMeasuredEvent.EVENT_NAME,
-      MapBuilder.of("registrationName", "onTabBarMeasured")
+      MapBuilder.of("registrationName", "onTabBarMeasured"),
+      OnTabBarPositionEvent.EVENT_NAME,
+      MapBuilder.of("registrationName", "onTabBarPosition")
     )
   }
 

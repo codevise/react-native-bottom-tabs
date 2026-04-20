@@ -13,6 +13,7 @@ import com.facebook.react.viewmanagers.RNCTabViewManagerDelegate
 import com.facebook.react.viewmanagers.RNCTabViewManagerInterface
 import com.rcttabview.events.OnNativeLayoutEvent
 import com.rcttabview.events.OnTabBarMeasuredEvent
+import com.rcttabview.events.OnTabBarPositionEvent
 import com.rcttabview.events.PageSelectedEvent
 import com.rcttabview.events.TabLongPressEvent
 
@@ -42,6 +43,9 @@ class RCTTabViewManager(context: ReactApplicationContext) :
     }
     view.onTabBarMeasuredListener = { height ->
       eventDispatcher?.dispatchEvent(OnTabBarMeasuredEvent(viewTag = view.id, height))
+    }
+    view.onTabBarPositionListener = { position ->
+      eventDispatcher?.dispatchEvent(OnTabBarPositionEvent(viewTag = view.id, position))
     }
     return view
 
