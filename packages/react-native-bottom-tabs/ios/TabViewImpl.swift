@@ -177,6 +177,23 @@ struct TabViewImpl: View {
 
     itemAppearance.normal.titleTextAttributes = attributes
 
+    // Shrink badge to a near-dot on iOS 26+ (liquid glass tab bar): SwiftUI
+    // .badge(Text) always renders a pill, so we collapse it via tiny font +
+    // clear text color and nudge it onto the icon. iOS 18 ignores these
+    // appearance hooks for the new Tab(value:) API, so we leave the default
+    // badge there.
+    if #available(iOS 26.0, *) {
+      let badgeAttributes: [NSAttributedString.Key: Any] = [
+        .font: UIFont.systemFont(ofSize: 5),
+        .foregroundColor: UIColor.clear,
+      ]
+      itemAppearance.normal.badgeTextAttributes = badgeAttributes
+      itemAppearance.selected.badgeTextAttributes = badgeAttributes
+      let badgeOffset = UIOffset(horizontal: 3, vertical: 3)
+      itemAppearance.normal.badgePositionAdjustment = badgeOffset
+      itemAppearance.selected.badgePositionAdjustment = badgeOffset
+    }
+
     // Apply item appearance to all layouts
     appearance.stackedLayoutAppearance = itemAppearance
     appearance.inlineLayoutAppearance = itemAppearance
