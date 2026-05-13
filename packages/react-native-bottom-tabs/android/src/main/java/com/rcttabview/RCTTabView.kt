@@ -84,6 +84,9 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
   private var fontSize: Int? = null
   private var fontFamily: String? = null
   private var fontWeight: Int? = null
+  private var activeFontSize: Int? = null
+  private var activeFontFamily: String? = null
+  private var activeFontWeight: Int? = null
   private var labeled: Boolean? = null
   private var lastReportedSize: Size? = null
   private var hasCustomAppearance = false
@@ -496,24 +499,54 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     updateTextAppearance()
   }
 
+  fun setActiveFontSize(size: Int) {
+    activeFontSize = size
+    updateTextAppearance()
+  }
+
+  fun setActiveFontFamily(family: String?) {
+    activeFontFamily = family
+    updateTextAppearance()
+  }
+
+  fun setActiveFontWeight(weight: String?) {
+    activeFontWeight = ReactTypefaceUtils.parseFontWeight(weight)
+    updateTextAppearance()
+  }
+
   fun onDropViewInstance() {
     imageLoader.shutdown()
   }
 
   private fun updateTextAppearance() {
-    // Early return if there is no custom text appearance
-    if (fontSize == null && fontFamily == null && fontWeight == null) {
+    // Early return if there is no custom text appearance on either base or active style
+    if (fontSize == null && fontFamily == null && fontWeight == null &&
+      activeFontSize == null && activeFontFamily == null && activeFontWeight == null) {
       return
     }
 
-    val typeface = if (fontFamily != null || fontWeight != null) {
+    val baseTypeface = if (fontFamily != null || fontWeight != null) {
       ReactFontManager.getInstance().getTypeface(
         fontFamily ?: "",
         Utils.getTypefaceStyle(fontWeight),
         context.assets
       )
     } else null
-    val size = fontSize?.toFloat()?.takeIf { it > 0 }
+    val baseSize = fontSize?.toFloat()?.takeIf { it > 0 }
+
+    // Active style: each component falls back to the base value when unset.
+    val effectiveActiveFamily = activeFontFamily ?: fontFamily
+    val effectiveActiveWeight = activeFontWeight ?: fontWeight
+    val effectiveActiveSize = activeFontSize ?: fontSize
+
+    val activeTypeface = if (effectiveActiveFamily != null || effectiveActiveWeight != null) {
+      ReactFontManager.getInstance().getTypeface(
+        effectiveActiveFamily ?: "",
+        Utils.getTypefaceStyle(effectiveActiveWeight),
+        context.assets
+      )
+    } else null
+    val activeSize = effectiveActiveSize?.toFloat()?.takeIf { it > 0 }
 
     val menuView = bottomNavigation.getChildAt(0) as? ViewGroup ?: return
     for (i in 0 until menuView.childCount) {
@@ -523,13 +556,15 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
       val smallLabel =
         item.findViewById<TextView>(com.google.android.material.R.id.navigation_bar_item_small_label_view)
 
-      listOf(largeLabel, smallLabel).forEach { label ->
-        label?.apply {
-          size?.let { size ->
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, size)
-          }
-          typeface?.let { setTypeface(it) }
-        }
+      // Material shows largeLabel for the selected item, smallLabel for inactive items —
+      // so applying different typefaces here gives per-state styling without a selection listener.
+      largeLabel?.apply {
+        activeSize?.let { setTextSize(TypedValue.COMPLEX_UNIT_SP, it) }
+        activeTypeface?.let { setTypeface(it) }
+      }
+      smallLabel?.apply {
+        baseSize?.let { setTextSize(TypedValue.COMPLEX_UNIT_SP, it) }
+        baseTypeface?.let { setTypeface(it) }
       }
     }
   }

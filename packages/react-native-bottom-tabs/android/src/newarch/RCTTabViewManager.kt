@@ -175,6 +175,18 @@ class RCTTabViewManager(context: ReactApplicationContext) :
     view?.setFontSize(value)
   }
 
+  override fun setActiveFontFamily(view: ReactBottomNavigationView?, value: String?) {
+    view?.setActiveFontFamily(value)
+  }
+
+  override fun setActiveFontWeight(view: ReactBottomNavigationView?, value: String?) {
+    view?.setActiveFontWeight(value)
+  }
+
+  override fun setActiveFontSize(view: ReactBottomNavigationView?, value: Int) {
+    view?.setActiveFontSize(value)
+  }
+
   override fun setDisablePageAnimations(view: ReactBottomNavigationView?, value: Boolean) {
     view?.disablePageAnimations = value
   }

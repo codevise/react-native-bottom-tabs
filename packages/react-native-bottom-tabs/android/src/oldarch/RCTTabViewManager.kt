@@ -194,4 +194,19 @@ class RCTTabViewManager(context: ReactApplicationContext) : ViewGroupManager<Rea
   fun setFontSize(view: ReactBottomNavigationView?, value: Int) {
     view?.setFontSize(value)
   }
+
+  @ReactProp(name = "activeFontFamily")
+  fun setActiveFontFamily(view: ReactBottomNavigationView?, value: String?) {
+    view?.setActiveFontFamily(value)
+  }
+
+  @ReactProp(name = "activeFontWeight")
+  fun setActiveFontWeight(view: ReactBottomNavigationView?, value: String?) {
+    view?.setActiveFontWeight(value)
+  }
+
+  @ReactProp(name = "activeFontSize", defaultInt = 0)
+  fun setActiveFontSize(view: ReactBottomNavigationView?, value: Int) {
+    view?.setActiveFontSize(value)
+  }
 }

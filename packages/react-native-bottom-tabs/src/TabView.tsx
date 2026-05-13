@@ -211,6 +211,15 @@ interface Props<Route extends BaseRoute> {
      */
     fontSize?: number;
   };
+  /**
+   * Style overrides applied to the active (selected) tab label, falling back
+   * to `tabLabelStyle` for any unset field. (Android only)
+   */
+  tabLabelActiveStyle?: {
+    fontFamily?: string;
+    fontWeight?: string;
+    fontSize?: number;
+  };
 }
 
 const ANDROID_MAX_TABS = 100;
@@ -251,6 +260,7 @@ const TabView = <Route extends BaseRoute>({
   tabBar: renderCustomTabBar,
   tabBarStyle,
   tabLabelStyle,
+  tabLabelActiveStyle,
   ...props
 }: Props<Route>) => {
   // @ts-ignore
@@ -403,6 +413,9 @@ const TabView = <Route extends BaseRoute>({
         <NativeTabView
           {...props}
           {...tabLabelStyle}
+          activeFontFamily={tabLabelActiveStyle?.fontFamily}
+          activeFontWeight={tabLabelActiveStyle?.fontWeight}
+          activeFontSize={tabLabelActiveStyle?.fontSize}
           style={styles.fullWidth}
           items={items}
           // When rendering a custom tab bar, icons can be React elements, which will not be properly resolved.
