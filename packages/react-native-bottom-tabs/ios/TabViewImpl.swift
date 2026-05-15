@@ -177,6 +177,27 @@ struct TabViewImpl: View {
 
     itemAppearance.normal.titleTextAttributes = attributes
 
+    // Active (selected) label styling — mirrors the Android tabLabelActiveStyle
+    // prop. Each field falls back to the corresponding base value, so the
+    // existing behavior (single style for all states) is preserved when
+    // tabLabelActiveStyle is unset. iOS 26+ liquid-glass tabs ignore
+    // UITabBarItemAppearance, so we skip there to keep system styling.
+    if #unavailable(iOS 26.0) {
+      let hasActiveOverride = props.activeFontFamily != nil
+        || props.activeFontWeight != nil
+        || props.activeFontSize != nil
+      if hasActiveOverride {
+        let selectedAttributes = TabBarFontSize.createNormalStateAttributes(
+          fontSize: props.activeFontSize ?? props.fontSize,
+          fontFamily: props.activeFontFamily ?? props.fontFamily,
+          fontWeight: props.activeFontWeight ?? props.fontWeight,
+          inactiveColor: nil
+        )
+        itemAppearance.selected.titleTextAttributes = selectedAttributes
+        itemAppearance.focused.titleTextAttributes = selectedAttributes
+      }
+    }
+
     // Push the title down by `tabBarItemPaddingTop` so it sits further from the
     // top divider. Pairs with the per-item imageInsets shift below — without
     // both, icon and label drift apart.
@@ -292,6 +313,15 @@ extension View {
           tabBar?.isHidden = newValue
         }
         .onChange(of: props.tabBarItemPaddingTop) { _ in
+          updateTabBarAppearance(props: props, tabBar: tabBar)
+        }
+        .onChange(of: props.activeFontFamily) { _ in
+          updateTabBarAppearance(props: props, tabBar: tabBar)
+        }
+        .onChange(of: props.activeFontWeight) { _ in
+          updateTabBarAppearance(props: props, tabBar: tabBar)
+        }
+        .onChange(of: props.activeFontSize) { _ in
           updateTabBarAppearance(props: props, tabBar: tabBar)
         }
     }

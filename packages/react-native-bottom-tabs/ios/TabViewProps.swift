@@ -65,6 +65,10 @@ class TabViewProps: ObservableObject {
   @Published var fontSize: Int?
   @Published var fontFamily: String?
   @Published var fontWeight: String?
+  // Active (selected) overrides — each falls back to the base font* value above.
+  @Published var activeFontSize: Int?
+  @Published var activeFontFamily: String?
+  @Published var activeFontWeight: String?
   @Published var tabBarHidden: Bool = false
   // -1 = unset (matches TabViewNativeComponent's WithDefault<Int32, -1>).
   @Published var tabBarItemPaddingTop: Int = -1

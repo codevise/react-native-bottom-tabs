@@ -157,6 +157,29 @@ public final class TabInfo: NSObject {
     }
   }
 
+  @objc public var activeFontFamily: NSString? {
+    didSet {
+      props.activeFontFamily = activeFontFamily as? String
+    }
+  }
+
+  @objc public var activeFontWeight: NSString? {
+    didSet {
+      props.activeFontWeight = activeFontWeight as? String
+    }
+  }
+
+  @objc public var activeFontSize: NSNumber? {
+    didSet {
+      // -1 (default from codegen WithDefault<Int32, -1>) means unset.
+      if let value = activeFontSize?.intValue, value >= 0 {
+        props.activeFontSize = value
+      } else {
+        props.activeFontSize = nil
+      }
+    }
+  }
+
   @objc public var tabBarHidden: Bool = false {
     didSet {
       props.tabBarHidden = tabBarHidden
