@@ -177,6 +177,16 @@ struct TabViewImpl: View {
 
     itemAppearance.normal.titleTextAttributes = attributes
 
+    // Push the title down by `tabBarItemPaddingTop` so it sits further from the
+    // top divider. Pairs with the per-item imageInsets shift below — without
+    // both, icon and label drift apart.
+    if props.tabBarItemPaddingTop >= 0 {
+      let titleOffset = UIOffset(horizontal: 0, vertical: CGFloat(props.tabBarItemPaddingTop))
+      itemAppearance.normal.titlePositionAdjustment = titleOffset
+      itemAppearance.selected.titlePositionAdjustment = titleOffset
+      itemAppearance.disabled.titlePositionAdjustment = titleOffset
+    }
+
     // Shrink badge to a near-dot on iOS 26+ (liquid glass tab bar): SwiftUI
     // .badge(Text) always renders a pill, so we collapse it via tiny font +
     // clear text color and nudge it onto the icon. iOS 18 ignores these
@@ -203,6 +213,14 @@ struct TabViewImpl: View {
     tabBar.standardAppearance = appearance
     if #available(iOS 15.0, *) {
       tabBar.scrollEdgeAppearance = appearance.copy()
+    }
+
+    // Push the icon down by `tabBarItemPaddingTop`. UITabBarItemAppearance has
+    // no icon-position knob; imageInsets must be set per item.
+    if props.tabBarItemPaddingTop >= 0, let items = tabBar.items {
+      let pad = CGFloat(props.tabBarItemPaddingTop)
+      let insets = UIEdgeInsets(top: pad, left: 0, bottom: -pad, right: 0)
+      items.forEach { $0.imageInsets = insets }
     }
   }
 #endif
@@ -272,6 +290,9 @@ extension View {
         }
         .onChange(of: props.tabBarHidden) { newValue in
           tabBar?.isHidden = newValue
+        }
+        .onChange(of: props.tabBarItemPaddingTop) { _ in
+          updateTabBarAppearance(props: props, tabBar: tabBar)
         }
     }
   #endif

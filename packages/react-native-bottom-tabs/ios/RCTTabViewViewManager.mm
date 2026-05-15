@@ -45,6 +45,7 @@ RCT_EXPORT_VIEW_PROPERTY(fontFamily, NSString)
 RCT_EXPORT_VIEW_PROPERTY(fontWeight, NSString)
 RCT_EXPORT_VIEW_PROPERTY(fontSize, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(tabBarHidden, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(tabBarItemPaddingTop, NSNumber)
 
 //  MARK: TabViewProviderDelegate
 

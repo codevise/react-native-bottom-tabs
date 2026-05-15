@@ -66,6 +66,8 @@ class TabViewProps: ObservableObject {
   @Published var fontFamily: String?
   @Published var fontWeight: String?
   @Published var tabBarHidden: Bool = false
+  // -1 = unset (matches TabViewNativeComponent's WithDefault<Int32, -1>).
+  @Published var tabBarItemPaddingTop: Int = -1
 
   var selectedActiveTintColor: PlatformColor? {
     if let selectedPage,

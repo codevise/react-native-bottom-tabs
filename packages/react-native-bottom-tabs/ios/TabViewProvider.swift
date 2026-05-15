@@ -163,6 +163,12 @@ public final class TabInfo: NSObject {
     }
   }
 
+  @objc public var tabBarItemPaddingTop: NSNumber? {
+    didSet {
+      props.tabBarItemPaddingTop = tabBarItemPaddingTop?.intValue ?? -1
+    }
+  }
+
   // New arch specific properties
 
   @objc public var itemsData: [TabInfo] = [] {
