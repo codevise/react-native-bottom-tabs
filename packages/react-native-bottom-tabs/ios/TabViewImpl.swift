@@ -237,11 +237,16 @@ struct TabViewImpl: View {
     }
 
     // Push the icon down by `tabBarItemPaddingTop`. UITabBarItemAppearance has
-    // no icon-position knob; imageInsets must be set per item.
+    // no icon-position knob; imageInsets must be set per item. UITabBar does
+    // not relayout items on its own when imageInsets are mutated outside the
+    // SwiftUI layout cycle, so force a layout pass — otherwise the new
+    // padding doesn't appear until the next tab switch triggers a relayout.
     if props.tabBarItemPaddingTop >= 0, let items = tabBar.items {
       let pad = CGFloat(props.tabBarItemPaddingTop)
       let insets = UIEdgeInsets(top: pad, left: 0, bottom: -pad, right: 0)
       items.forEach { $0.imageInsets = insets }
+      tabBar.setNeedsLayout()
+      tabBar.layoutIfNeeded()
     }
   }
 #endif
