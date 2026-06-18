@@ -17,6 +17,14 @@ private final class TabBarDelegate: NSObject, UITabBarControllerDelegate {
     }
 #endif
 
+    // iOS 27 silently replaced tabBarController(_:shouldSelect:) with
+    // tabBarController(_:shouldSelectTab:) for SwiftUI's TabView, so this method is
+    // no longer called there. Let the shouldSelectTab path handle 27+ to avoid
+    // double-firing onClick. See: https://github.com/callstack/react-native-bottom-tabs/pull/530
+    if #available(iOS 27.0, *) {
+      return true
+    }
+
     // Unfortunately, due to iOS 26 new tab switching animations, controlling state from JavaScript is causing significant delays when switching tabs.
     // See: https://github.com/callstackincubator/react-native-bottom-tabs/issues/383
     // Due to this, whether the tab prevents default has to be defined statically.
@@ -27,6 +35,21 @@ private final class TabBarDelegate: NSObject, UITabBarControllerDelegate {
     }
 
     return false
+  }
+
+  // iOS 27+ delivers SwiftUI TabView selections here instead of shouldSelect. Map
+  // the UITab back to its index (tabs order matches filteredItems order, mirroring
+  // the viewControllers.firstIndex mapping above) and run the same onClick gate so
+  // JS still learns about tab presses.
+  @available(iOS 18.0, *)
+  func tabBarController(_ tabBarController: UITabBarController, shouldSelectTab tab: UITab) -> Bool {
+    if let index = tabBarController.tabs.firstIndex(where: { $0 === tab }) {
+      let defaultPrevented = onClick?(index) ?? false
+
+      return !defaultPrevented
+    }
+
+    return true
   }
 }
 
