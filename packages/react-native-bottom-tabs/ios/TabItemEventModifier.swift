@@ -40,10 +40,14 @@ private final class TabBarDelegate: NSObject, UITabBarControllerDelegate {
   // iOS 27+ delivers SwiftUI TabView selections here instead of shouldSelect. Map
   // the UITab back to its index (tabs order matches filteredItems order, mirroring
   // the viewControllers.firstIndex mapping above) and run the same onClick gate so
-  // JS still learns about tab presses.
+  // JS still learns about tab presses. The identifier fallback guards against SwiftUI
+  // handing us a UITab that isn't object-identical to the tabs array entry: identity
+  // alone would return nil, drop the onClick, and (with lazy tabs) white-screen the
+  // target. The comparison is tab-to-tab, so it does NOT require the identifier to
+  // equal our TabInfo.key. Mirrors the lookup in callstack/react-native-bottom-tabs#530.
   @available(iOS 18.0, *)
   func tabBarController(_ tabBarController: UITabBarController, shouldSelectTab tab: UITab) -> Bool {
-    if let index = tabBarController.tabs.firstIndex(where: { $0 === tab }) {
+    if let index = tabBarController.tabs.firstIndex(where: { $0 === tab || $0.identifier == tab.identifier }) {
       let defaultPrevented = onClick?(index) ?? false
 
       return !defaultPrevented
