@@ -120,8 +120,14 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     uiModeConfiguration = resources.configuration.uiMode
 
     post {
-      addOnLayoutChangeListener { _, left, top, right, bottom,
-                                  _, _, _, _ ->
+      // Listen on layoutHolder itself: the reported size, the dedup key and the
+      // layout that triggers the event must all be the same view. Listening on
+      // the outer view raced with the holder's own (choreographer-deferred)
+      // layout passes: an event could capture a transient holder size, and the
+      // holder's later correction never fired an event because the outer bounds
+      // hadn't changed (scenes then stayed stuck at e.g. landscape height).
+      layoutHolder.addOnLayoutChangeListener { _, left, top, right, bottom,
+                                               _, _, _, _ ->
         val newWidth = right - left
         val newHeight = bottom - top
 
@@ -129,11 +135,16 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
         onTabBarMeasuredListener?.invoke(Utils.convertPixelsToDp(context, bottomNavigation.height).toInt())
         onTabBarPositionListener?.invoke("bottom")
 
-        if (newWidth != lastReportedSize?.width || newHeight != lastReportedSize?.height) {
-          val dpWidth = Utils.convertPixelsToDp(context, layoutHolder.width)
-          val dpHeight = Utils.convertPixelsToDp(context, layoutHolder.height)
+        // A zero-sized holder is a transient/hidden state, never a real viewport.
+        if (newWidth == 0 || newHeight == 0) {
+          return@addOnLayoutChangeListener
+        }
 
-          onNativeLayoutListener?.invoke(dpWidth, dpHeight)
+        if (newWidth != lastReportedSize?.width || newHeight != lastReportedSize?.height) {
+          onNativeLayoutListener?.invoke(
+            Utils.convertPixelsToDp(context, newWidth),
+            Utils.convertPixelsToDp(context, newHeight),
+          )
           lastReportedSize = Size(newWidth, newHeight)
         }
       }
