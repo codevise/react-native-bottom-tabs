@@ -295,10 +295,13 @@ public final class TabInfo: NSObject {
   /// bar is possible here" and "one is allowed but the edge is unresolved", so
   /// it falls through to the horizontal inference rather than being trusted.
   private func resolvedTabBarPosition() -> String {
-    switch verticalBarEdge {
-    case .leading: return "leading"
-    case .trailing: return "trailing"
-    case .unspecified, .none: break
+    if #available(iOS 27.1, *) {
+      switch traitCollection.verticalBarEdge {
+      case .leading: return "leading"
+      case .trailing: return "trailing"
+      case .unspecified: break
+      @unknown default: break
+      }
     }
 
     let isRegularWidth = traitCollection.horizontalSizeClass == .regular
@@ -307,30 +310,6 @@ public final class TabInfo: NSObject {
       tabsCanBeAtTop = true
     }
     return (isRegularWidth && tabsCanBeAtTop) ? "top" : "bottom"
-  }
-
-  private enum VerticalBarEdge {
-    case unspecified, leading, trailing
-  }
-
-  /// `UITraitCollection.verticalBarEdge`, read by selector name so the package
-  /// still builds against SDKs that predate it. `nil` where the trait does not
-  /// exist.
-  ///
-  /// The raw values are not documented; `0 unspecified, 1 leading, 2 trailing`
-  /// is what an iPhone Duo on iOS 27.1 reports, cross-checked against the bar's
-  /// own frame in every pose.
-  private var verticalBarEdge: VerticalBarEdge? {
-    let name = "verticalBarEdge"
-    guard traitCollection.responds(to: NSSelectorFromString(name)),
-          let raw = (traitCollection.value(forKey: name) as? NSNumber)?.intValue
-    else { return nil }
-
-    switch raw {
-    case 1: return .leading
-    case 2: return .trailing
-    default: return .unspecified
-    }
   }
   #endif
 
