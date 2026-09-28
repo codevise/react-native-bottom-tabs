@@ -223,6 +223,13 @@ public final class TabInfo: NSObject {
   override public func layoutSubviews() {
     super.layoutSubviews()
     setupView()
+    // The position is read from the tab bar's frame, and neither registered
+    // trait fires when only that frame moves: the bar can change sides while
+    // the size class and the vertical bar edge both stay put. The first emit
+    // also runs before SwiftUI has built the tab bar controller, so there is no
+    // frame to read yet and the trait answers instead. Re-resolving on every
+    // layout covers both; `emitTabBarPosition` drops anything unchanged.
+    emitTabBarPosition()
   }
 #endif
 
@@ -252,6 +259,8 @@ public final class TabInfo: NSObject {
 #endif
     }
   }
+
+  private var lastEmittedTabBarPosition: String?
 
   #if !os(macOS)
   override public func didMoveToWindow() {
@@ -285,7 +294,11 @@ public final class TabInfo: NSObject {
   }
 
   private func emitTabBarPosition() {
-    delegate?.onTabBarPosition(position: resolvedTabBarPosition(), reactTag: reactTag)
+    let position = resolvedTabBarPosition()
+    guard position != lastEmittedTabBarPosition else { return }
+
+    lastEmittedTabBarPosition = position
+    delegate?.onTabBarPosition(position: position, reactTag: reactTag)
   }
 
   /// Where the system placed the tab bar.
