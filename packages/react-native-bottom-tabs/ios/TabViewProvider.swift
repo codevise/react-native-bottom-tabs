@@ -295,6 +295,10 @@ public final class TabInfo: NSObject {
   /// bar is possible here" and "one is allowed but the edge is unresolved", so
   /// it falls through to the horizontal inference rather than being trusted.
   private func resolvedTabBarPosition() -> String {
+    if let measured = measuredTabBarPosition() {
+      return measured
+    }
+
     if #available(iOS 27.1, *) {
       switch traitCollection.verticalBarEdge {
       case .leading: return "leading"
@@ -310,6 +314,51 @@ public final class TabInfo: NSObject {
       tabsCanBeAtTop = true
     }
     return (isRegularWidth && tabsCanBeAtTop) ? "top" : "bottom"
+  }
+
+  /// Where the tab bar sits, read from its own frame.
+  ///
+  /// Authoritative once the bar has been laid out, and the only signal that
+  /// separates a bottom bar from a top bar in a regular width — neither the
+  /// size class nor the vertical bar edge can, since both report the same
+  /// values for a tablet and for a large phone display holding a bottom bar.
+  ///
+  /// `nil` before the first layout, where the frame is empty and says nothing.
+  private func measuredTabBarPosition() -> String? {
+    guard let tabController = tabBarController(under: hostingController) else { return nil }
+
+    let bar = tabController.tabBar.frame
+    let container = tabController.view.bounds
+    guard bar.width > 0, bar.height > 0, container.width > 0, container.height > 0
+    else { return nil }
+
+    let spansWidth = abs(bar.width - container.width) < 1
+    let spansHeight = abs(bar.height - container.height) < 1
+
+    if spansWidth && !spansHeight {
+      return bar.minY > container.midY ? "bottom" : "top"
+    }
+
+    if spansHeight && !spansWidth {
+      // The reported edge follows layout direction, while the frame is physical.
+      let isRightToLeft = traitCollection.layoutDirection == .rightToLeft
+      let sitsOnTheRight = bar.minX > container.midX
+      return (sitsOnTheRight != isRightToLeft) ? "trailing" : "leading"
+    }
+
+    return nil
+  }
+
+  /// The `UITabBarController` SwiftUI created for the `TabView`, which is a
+  /// descendant of the hosting controller rather than something we are handed.
+  private func tabBarController(under controller: UIViewController?) -> UITabBarController? {
+    guard let controller else { return nil }
+    if let tabController = controller as? UITabBarController { return tabController }
+
+    for child in controller.children {
+      if let found = tabBarController(under: child) { return found }
+    }
+    return nil
   }
   #endif
 
