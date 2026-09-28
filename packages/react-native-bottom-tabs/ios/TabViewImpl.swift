@@ -64,9 +64,7 @@ struct TabViewImpl: View {
         #else
           tabBar = tabController.tabBar
           if !props.tabBarHidden {
-            onTabBarMeasured(
-              Int(tabController.tabBar.frame.size.height)
-            )
+            onTabBarMeasured(horizontalTabBarHeight(of: tabController))
           }
         #endif
       }
@@ -104,6 +102,32 @@ struct TabViewImpl: View {
     #endif
   }
 }
+
+#if !os(macOS)
+  /// The height a horizontal tab bar occupies along the bottom of the content.
+  ///
+  /// A vertical bar runs the full height of its container, so its frame height
+  /// is the container's height — a number that means nothing to a consumer
+  /// reserving space below the content, and large enough to blank out a screen
+  /// if it is used as one. Report 0 in that case. The space a vertical bar takes
+  /// is on a horizontal edge and is already carried by the safe-area insets.
+  private func horizontalTabBarHeight(of tabController: UITabBarController) -> Int {
+    let barFrame = tabController.tabBar.frame
+    let container = tabController.view.bounds
+
+    guard barFrame.width > 0, barFrame.height > 0 else {
+      return Int(barFrame.height)
+    }
+
+    let spansWidth = abs(barFrame.width - container.width) < 1
+    let spansHeight = abs(barFrame.height - container.height) < 1
+    if spansHeight && !spansWidth {
+      return 0
+    }
+
+    return Int(barFrame.height)
+  }
+#endif
 
 #if !os(macOS)
   private func updateTabBarAppearance(props: TabViewProps, tabBar: UITabBar?) {
