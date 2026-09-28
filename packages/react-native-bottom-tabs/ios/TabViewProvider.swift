@@ -263,6 +263,14 @@ public final class TabInfo: NSObject {
           self.emitTabBarPosition()
         }
       }
+      if #available(iOS 27.1, *) {
+        // The vertical bar edge changes without a size-class change — moving the
+        // window across a split-view divider flips it at constant width — so the
+        // size-class registration above cannot see it.
+        registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) { (self: TabViewProvider, _: UITraitCollection) in
+          self.emitTabBarPosition()
+        }
+      }
     }
   }
 
@@ -277,13 +285,52 @@ public final class TabInfo: NSObject {
   }
 
   private func emitTabBarPosition() {
+    delegate?.onTabBarPosition(position: resolvedTabBarPosition(), reactTag: reactTag)
+  }
+
+  /// Where the system placed the tab bar.
+  ///
+  /// A resolved vertical bar edge is authoritative: the bar runs along that side
+  /// and is not a horizontal bar at all. `unspecified` covers both "no vertical
+  /// bar is possible here" and "one is allowed but the edge is unresolved", so
+  /// it falls through to the horizontal inference rather than being trusted.
+  private func resolvedTabBarPosition() -> String {
+    switch verticalBarEdge {
+    case .leading: return "leading"
+    case .trailing: return "trailing"
+    case .unspecified, .none: break
+    }
+
     let isRegularWidth = traitCollection.horizontalSizeClass == .regular
     var tabsCanBeAtTop = false
     if #available(iOS 18.0, *) {
       tabsCanBeAtTop = true
     }
-    let position = (isRegularWidth && tabsCanBeAtTop) ? "top" : "bottom"
-    delegate?.onTabBarPosition(position: position, reactTag: reactTag)
+    return (isRegularWidth && tabsCanBeAtTop) ? "top" : "bottom"
+  }
+
+  private enum VerticalBarEdge {
+    case unspecified, leading, trailing
+  }
+
+  /// `UITraitCollection.verticalBarEdge`, read by selector name so the package
+  /// still builds against SDKs that predate it. `nil` where the trait does not
+  /// exist.
+  ///
+  /// The raw values are not documented; `0 unspecified, 1 leading, 2 trailing`
+  /// is what an iPhone Duo on iOS 27.1 reports, cross-checked against the bar's
+  /// own frame in every pose.
+  private var verticalBarEdge: VerticalBarEdge? {
+    let name = "verticalBarEdge"
+    guard traitCollection.responds(to: NSSelectorFromString(name)),
+          let raw = (traitCollection.value(forKey: name) as? NSNumber)?.intValue
+    else { return nil }
+
+    switch raw {
+    case 1: return .leading
+    case 2: return .trailing
+    default: return .unspecified
+    }
   }
   #endif
 
