@@ -272,14 +272,18 @@ public final class TabInfo: NSObject {
           self.emitTabBarPosition()
         }
       }
-      if #available(iOS 27.1, *) {
-        // The vertical bar edge changes without a size-class change — moving the
-        // window across a split-view divider flips it at constant width — so the
-        // size-class registration above cannot see it.
-        registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) { (self: TabViewProvider, _: UITraitCollection) in
-          self.emitTabBarPosition()
+      // The vertical bar API ships with the iOS 27.1 SDK (Xcode 27.1, Swift 6.4);
+      // older Xcodes compile without it.
+      #if compiler(>=6.4)
+        if #available(iOS 27.1, *) {
+          // The vertical bar edge changes without a size-class change — moving the
+          // window across a split-view divider flips it at constant width — so the
+          // size-class registration above cannot see it.
+          registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) { (self: TabViewProvider, _: UITraitCollection) in
+            self.emitTabBarPosition()
+          }
         }
-      }
+      #endif
     }
   }
 
@@ -312,14 +316,16 @@ public final class TabInfo: NSObject {
       return measured
     }
 
-    if #available(iOS 27.1, *) {
-      switch traitCollection.verticalBarEdge {
-      case .leading: return "leading"
-      case .trailing: return "trailing"
-      case .unspecified: break
-      @unknown default: break
+    #if compiler(>=6.4)
+      if #available(iOS 27.1, *) {
+        switch traitCollection.verticalBarEdge {
+        case .leading: return "leading"
+        case .trailing: return "trailing"
+        case .unspecified: break
+        @unknown default: break
+        }
       }
-    }
+    #endif
 
     let isRegularWidth = traitCollection.horizontalSizeClass == .regular
     var tabsCanBeAtTop = false
