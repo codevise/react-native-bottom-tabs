@@ -66,6 +66,9 @@ struct TabViewImpl: View {
           if !props.tabBarHidden {
             onTabBarMeasured(horizontalTabBarHeight(of: tabController))
           }
+          #if os(iOS)
+            VerticalBarBadges.align(in: tabController)
+          #endif
         #endif
       }
       #if !os(macOS)
@@ -417,3 +420,84 @@ extension View {
     }
   }
 }
+
+#if os(iOS)
+  /// Badge position on the vertical tab bar (iPhone Duo).
+  ///
+  /// The appearance's `badgePositionAdjustment` is shared by both bars, but they
+  /// read it differently: the horizontal bar follows it live, while the vertical
+  /// bar copies it once when it builds its items and ignores later changes. A
+  /// fold or unfold passes through a horizontal bar and rebuilds the vertical one
+  /// mid-transition, so no appearance value can be in place in time for it. The
+  /// appearance therefore keeps the horizontal bar's offset, and the vertical
+  /// bar's badges are moved by the difference here, after every rebuild.
+  @MainActor
+  enum VerticalBarBadges {
+    /// The vertical bar centres the icon with no label under it, which puts the
+    /// badge 8.5pt higher against the icon's corner than in a horizontal bar.
+    /// Measured on the iOS 27.1 simulator.
+    static let extraVerticalOffset: CGFloat = 8.5
+
+    /// Whether a shift is in place. The bar reuses the same badge views when it
+    /// turns horizontal, so the shift has to be taken off again then.
+    private static var isShifted = false
+
+    static func align(in tabController: UITabBarController) {
+      let vertical = isVertical(tabController)
+      guard vertical || isShifted, let root = tabViewRoot(of: tabController) else { return }
+      let shift = vertical
+        ? CATransform3DMakeTranslation(0, extraVerticalOffset, 0)
+        : CATransform3DIdentity
+      visit(root, insideVerticalBar: false, vertical: vertical, shift: shift)
+      isShifted = vertical
+    }
+
+    /// The top of the native tab view inside React Native's hierarchy: everything
+    /// above it is React Native, which is where the walk must not be pruned from.
+    private static func tabViewRoot(of tabController: UITabBarController) -> UIView? {
+      var root: UIView? = tabController.view
+      while let parent = root?.superview, !isReactNative(parent) {
+        root = parent
+      }
+      return root
+    }
+
+    private static func isReactNative(_ view: UIView) -> Bool {
+      let name = String(describing: type(of: view))
+      return name.hasPrefix("RCT") || name.hasPrefix("RNS")
+    }
+
+    /// The vertical bar spans its container's height rather than its width.
+    private static func isVertical(_ tabController: UITabBarController) -> Bool {
+      let bar = tabController.tabBar.frame
+      let container = tabController.view.bounds
+      guard bar.width > 0, bar.height > 0 else { return false }
+      return abs(bar.height - container.height) < 1 && abs(bar.width - container.width) >= 1
+    }
+
+    /// The vertical bar's items live outside the `UITabBar`, in a toolbar-hosted
+    /// `_UITabBarExpansionPlatterContainer`. The tabs' React Native content is
+    /// skipped, as it holds no tab bar views and is most of the hierarchy.
+    private static func visit(
+      _ view: UIView,
+      insideVerticalBar: Bool,
+      vertical: Bool,
+      shift: CATransform3D
+    ) {
+      if isReactNative(view) { return }
+      let name = String(describing: type(of: view))
+      let inside = insideVerticalBar || name == "_UITabBarExpansionPlatterContainer"
+      // UIKit lays the badge views out by setting their `frame`, which absorbs
+      // a transform on the badge itself. Their container holds every item's
+      // badge, so move the whole set through its sublayer transform instead.
+      // Taking the shift off covers every container, wherever the bar put it.
+      if name == "BadgeContainerView", inside || !vertical {
+        view.layer.sublayerTransform = shift
+        return
+      }
+      view.subviews.forEach {
+        visit($0, insideVerticalBar: inside, vertical: vertical, shift: shift)
+      }
+    }
+  }
+#endif
