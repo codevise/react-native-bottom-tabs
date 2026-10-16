@@ -337,14 +337,19 @@ public final class TabInfo: NSObject {
 
   /// Where the tab bar sits, read from its own frame.
   ///
-  /// Authoritative once the bar has been laid out, and the only signal that
+  /// Authoritative while the bar is in the window, and the only signal that
   /// separates a bottom bar from a top bar in a regular width — neither the
   /// size class nor the vertical bar edge can, since both report the same
   /// values for a tablet and for a large phone display holding a bottom bar.
   ///
-  /// `nil` before the first layout, where the frame is empty and says nothing.
+  /// `nil` before the first layout, where the frame is empty and says nothing,
+  /// and while the bar is out of the window: a regular-width iPad draws a
+  /// floating bar of its own at the top and removes the `UITabBar`, which keeps
+  /// the bottom-edge frame of its last layout.
   private func measuredTabBarPosition() -> String? {
-    guard let tabController = tabBarController(under: hostingController) else { return nil }
+    guard let tabController = tabBarController(under: hostingController),
+          tabController.tabBar.window != nil
+    else { return nil }
 
     let bar = tabController.tabBar.frame
     let container = tabController.view.bounds
