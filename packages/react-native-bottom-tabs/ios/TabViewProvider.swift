@@ -246,6 +246,13 @@ public final class TabInfo: NSObject {
       self.delegate?.onLayout(size: size, reactTag: self.reactTag)
     } onTabBarMeasured: { height in
       self.delegate?.onTabBarMeasured(height: height, reactTag: self.reactTag)
+      // UIKit moves the bar in the tab bar controller's own layout, after this
+      // view's layout and the trait callbacks have read it, and a fold or a
+      // rotation passes through a horizontal bar on its way to a vertical one.
+      // Nothing here reads the bar again once it has settled. The measurement
+      // runs whenever SwiftUI re-renders the tab view, which the app can request
+      // after such a change, so re-resolve the position along with the height.
+      self.emitTabBarPosition()
     })
 
     if let hostingController = self.hostingController, let parentViewController = reactViewController() {
