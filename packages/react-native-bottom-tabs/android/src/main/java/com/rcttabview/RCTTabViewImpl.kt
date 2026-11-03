@@ -130,11 +130,14 @@ class RCTTabViewImpl {
   }
 
   fun getChildAt(parent: ReactBottomNavigationView, index: Int): View? {
-    return parent.layoutHolder.getChildAt(index)
+    return (parent.layoutHolder.getChildAt(index) as? ViewGroup)?.getChildAt(0)
   }
 
   fun removeView(parent: ReactBottomNavigationView, view: View) {
-    parent.layoutHolder.removeView(view)
+    val container = view.parent as? ViewGroup ?: return
+    if (container.parent === parent.layoutHolder) {
+      parent.layoutHolder.removeView(container)
+    }
   }
 
   fun removeAllViews(parent: ReactBottomNavigationView) {
