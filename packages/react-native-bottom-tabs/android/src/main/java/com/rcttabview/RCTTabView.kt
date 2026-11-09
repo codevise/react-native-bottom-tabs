@@ -120,34 +120,39 @@ class ReactBottomNavigationView(context: Context) : LinearLayout(context) {
     uiModeConfiguration = resources.configuration.uiMode
 
     post {
-      // Listen on layoutHolder itself: the reported size, the dedup key and the
-      // layout that triggers the event must all be the same view. Listening on
-      // the outer view raced with the holder's own (choreographer-deferred)
-      // layout passes: an event could capture a transient holder size, and the
-      // holder's later correction never fired an event because the outer bounds
-      // hadn't changed (scenes then stayed stuck at e.g. landscape height).
-      layoutHolder.addOnLayoutChangeListener { _, left, top, right, bottom,
-                                               _, _, _, _ ->
-        val newWidth = right - left
-        val newHeight = bottom - top
-
+      // Runs after the children are laid out, so the tab bar height is final here.
+      addOnLayoutChangeListener { _, _, _, _, _,
+                                  _, _, _, _ ->
         // Notify about tab bar height and position (always bottom on Android).
         onTabBarMeasuredListener?.invoke(Utils.convertPixelsToDp(context, bottomNavigation.height).toInt())
         onTabBarPositionListener?.invoke("bottom")
 
-        // A zero-sized holder is a transient/hidden state, never a real viewport.
-        if (newWidth == 0 || newHeight == 0) {
-          return@addOnLayoutChangeListener
-        }
-
-        if (newWidth != lastReportedSize?.width || newHeight != lastReportedSize?.height) {
-          onNativeLayoutListener?.invoke(
-            Utils.convertPixelsToDp(context, newWidth),
-            Utils.convertPixelsToDp(context, newHeight),
-          )
-          lastReportedSize = Size(newWidth, newHeight)
-        }
+        reportLayoutHolderSizeIfChanged()
       }
+      // Kept from upstream #558. layoutHolder is only laid out in this view's
+      // onLayout, so the outer listener above reports the same sizes as well.
+      layoutHolder.addOnLayoutChangeListener { _, _, _, _, _,
+                                               _, _, _, _ ->
+        reportLayoutHolderSizeIfChanged()
+      }
+    }
+  }
+
+  private fun reportLayoutHolderSizeIfChanged() {
+    val newWidth = layoutHolder.width
+    val newHeight = layoutHolder.height
+
+    // A zero-sized holder is a transient/hidden state, never a real viewport.
+    if (newWidth == 0 || newHeight == 0) {
+      return
+    }
+
+    if (newWidth != lastReportedSize?.width || newHeight != lastReportedSize?.height) {
+      onNativeLayoutListener?.invoke(
+        Utils.convertPixelsToDp(context, newWidth),
+        Utils.convertPixelsToDp(context, newHeight),
+      )
+      lastReportedSize = Size(newWidth, newHeight)
     }
   }
 
